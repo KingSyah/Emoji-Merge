@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <title>Fruit Fusion - Merge Game</title>
+    <meta name="description" content="A modern fruit fusion puzzle game. Drop fruits, merge identical ones, and create bigger fruits!">
+    <meta name="keywords" content="fruit merge, puzzle game, mobile game, html5 game, suika game">
+    <meta name="author" content="Fruit Fusion Game">
+
+    <!-- Enhanced Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="apple-touch-fullscreen" content="yes">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fruit Fusion">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍎</text></svg>">
+</head>
+<body>
+    <!-- Background particles for PC -->
+    <div class="background-particles" id="background-particles"></div>
+    
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🍎 Fruit Fusion</h1>
+            <div class="score-board">
+                <div class="score">
+                    <span>Score: </span>
+                    <span id="score">0</span>
+                </div>
+                <div class="best-score">
+                    <span>Best: </span>
+                    <span id="best-score">0</span>
+                </div>
+                <div class="level">
+                    <span>Level: </span>
+                    <span id="level">1</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <div class="next-fruit">
+                <span>Next:</span>
+                <div id="next-fruit" class="fruit-preview">🍒</div>
+            </div>
+            
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-line"></div>
+                <div class="drop-indicator" id="drop-indicator"></div>
+            </div>
+            
+            <canvas id="game-canvas" width="400" height="600"></canvas>
+            
+            <!-- Game Over Line -->
+            <div class="danger-line" id="danger-line"></div>
+        </div>
+
+        <div class="game-controls">
+            <button id="restart-btn" class="btn btn-restart">🔄 Restart</button>
+            <button id="pause-btn" class="btn btn-pause">⏸️ Pause</button>
+            <button id="mute-btn" class="btn btn-mute">🔊 Sound</button>
+            <button id="fullscreen-btn" class="btn btn-fullscreen">📱 Full</button>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <p>🎯 Click or tap to drop fruits</p>
+            <p>🔄 Merge same fruits to create bigger ones</p>
+            <p>🏆 Don't let fruits reach the red line!</p>
+            <p>💎 Create combos for bonus points</p>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="game-over-modal" id="game-over-modal">
+        <div class="modal-content">
+            <h2>🎮 Game Over!</h2>
+            <div class="final-stats">
+                <p>Final Score: <span id="final-score">0</span></p>
+                <p>Level Reached: <span id="final-level">1</span></p>
+                <p>Best Fruit: <span id="best-fruit">🍒</span></p>
+            </div>
+            <div class="modal-buttons">
+                <button id="play-again-btn" class="btn btn-primary">🎯 Play Again</button>
+                <button id="share-score-btn" class="btn btn-secondary">📤 Share</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div class="pause-modal" id="pause-modal">
+        <div class="modal-content">
+            <h2>⏸️ Game Paused</h2>
+            <div class="modal-buttons">
+                <button id="resume-btn" class="btn btn-primary">▶️ Resume</button>
+                <button id="restart-from-pause-btn" class="btn btn-secondary">🔄 Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-fruits">
+                <div class="loading-fruit">🍒</div>
+                <div class="loading-fruit">🍇</div>
+                <div class="loading-fruit">🍓</div>
+            </div>
+            <h2>Loading Fruit Fusion...</h2>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="copyright">
+        <p>&copy; <span id="current-year"></span> Fruit Fusion Game. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
