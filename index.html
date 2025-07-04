@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <title>Fruit Fusion - KingSyah</title>
+    <meta name="description" content="A modern fruit fusion puzzle game. Drop fruits, merge identical ones, and create bigger fruits!">
+    <meta name="keywords" content="fruit merge, puzzle game, mobile game, html5 game">
+    <meta name="author" content="KingSyah">
+
+    <!-- Enhanced Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="apple-touch-fullscreen" content="yes">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fruit Fusion">
+
+    <!-- Manifest (disabled for local development) -->
+    <!-- <link rel="manifest" href="manifest.json"> -->
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍎</text></svg>">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🍎 Fruit Fusion</h1>
+            <div class="score-board">
+                <div class="score">
+                    <span>Score: </span>
+                    <span id="score">0</span>
+                </div>
+                <div class="best-score">
+                    <span>Best: </span>
+                    <span id="best-score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <div class="next-fruit">
+                <span>Next:</span>
+                <div id="next-fruit" class="fruit-preview">🍒</div>
+            </div>
+            
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-line"></div>
+            </div>
+            
+            <canvas id="game-canvas" width="400" height="600"></canvas>
+        </div>
+
+        <div class="game-controls">
+            <button id="restart-btn" class="btn">🔄 Restart</button>
+            <button id="pause-btn" class="btn">⏸️ Pause</button>
+            <button id="mute-btn" class="btn">🔊 Sound</button>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <p>🎯 Click or tap to drop fruits</p>
+            <p>🔄 Merge same fruits to create bigger ones</p>
+            <p>🏆 Don't let fruits reach the top!</p>
+        </div>
+    </div>
+
+    <div class="game-over-modal" id="game-over-modal">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="play-again-btn" class="btn">Play Again</button>
+        </div>
+    </div>
+
+    <footer class="copyright">
+        <p>&copy; <span id="current-year"></span> KingSyah. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
