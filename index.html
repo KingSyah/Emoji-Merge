@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+  <title>🍉 Fruit Smash - Merge & Conquer</title>
+  <meta name="theme-color" content="#0f0a1e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIj7wn42JPC90ZXh0Pjwvc3ZnPg==">
+</head>
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <div id="app">
+
+    <!-- TOP BAR: scores + fullscreen + help -->
+    <div class="topbar">
+      <div class="topbar-scores">
+        <div class="score-pill accent">
+          <span class="label">Score</span>
+          <span class="val" id="score">0</span>
+        </div>
+        <div class="score-pill">
+          <span class="label">Best</span>
+          <span class="val" id="best">0</span>
+        </div>
+        <div class="score-pill green">
+          <span class="label">Traps</span>
+          <span class="val" id="trap-count">0</span>
+        </div>
+      </div>
+      <div class="topbar-btns">
+        <button class="icon-btn" id="fullscreen-btn" title="Fullscreen">⛶</button>
+        <button class="icon-btn" id="help-btn" title="How to play">❓</button>
+      </div>
+    </div>
+
+    <!-- GOAL BANNER -->
+    <div class="goal-banner">
+      <div class="goal-info">
+        <span class="goal-label">Mission</span>
+        <span class="goal-text" id="goal-text">Reach 500 pts</span>
+      </div>
+      <div class="goal-progress-wrap">
+        <div class="goal-bar-bg">
+          <div class="goal-bar-fill" id="goal-bar" style="width:0%"></div>
+        </div>
+        <div class="goal-pct" id="goal-pct">0%</div>
+      </div>
+      <div class="level-badge" id="level-badge">LV1</div>
+    </div>
+
+    <!-- NEXT FRUIT ROW -->
+    <div class="next-row">
+      <span class="next-label">Next</span>
+      <span id="next-icon">🍒</span>
+      <div class="trap-warning" id="trap-warning">⚠️ TRAP!</div>
+      <span class="drop-hint">Tap canvas to drop</span>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="game-canvas"></canvas>
+      <div class="cursor-line" id="cursor-line"></div>
+      <div class="danger-flash" id="danger-flash"></div>
+      <div class="combo-display" id="combo-display"></div>
+    </div>
+
+    <!-- BOTTOM CONTROLS -->
+    <div class="bottom-ctrl">
+      <button class="ctrl-btn restart" id="restart-btn">🔄 Restart</button>
+      <button class="ctrl-btn pause" id="pause-btn">⏸ Pause</button>
+      <button class="ctrl-btn mute" id="mute-btn">🔊 Sound</button>
+    </div>
+
+  </div>
+
+  <!-- LEVEL COMPLETE MODAL -->
+  <div class="modal-overlay" id="level-modal">
+    <div class="modal">
+      <div class="level-complete-badge" id="lc-badge">🏆</div>
+      <h2 id="lc-title">Level Complete!</h2>
+      <div class="sub" id="lc-sub">Amazing fruit skills!</div>
+      <div class="stars-rating" id="lc-stars">⭐⭐⭐</div>
+      <div class="modal-stats">
+        <div class="stat-item"><span class="stat-label">Score</span><span class="stat-val" id="lc-score">0</span></div>
+        <div class="stat-item"><span class="stat-label">Traps Avoided</span><span class="stat-val" id="lc-traps">0</span></div>
+        <div class="stat-item"><span class="stat-label">Merges</span><span class="stat-val" id="lc-merges">0</span></div>
+        <div class="stat-item"><span class="stat-label">Best Combo</span><span class="stat-val" id="lc-combo">0</span></div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" id="next-level-btn">Next Level →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER MODAL -->
+  <div class="modal-overlay" id="gameover-modal">
+    <div class="modal">
+      <div class="level-complete-badge">💀</div>
+      <h2>Game Over</h2>
+      <div class="sub" id="go-sub">Fruits piled up too high!</div>
+      <div class="modal-stats">
+        <div class="stat-item"><span class="stat-label">Score</span><span class="stat-val" id="go-score">0</span></div>
+        <div class="stat-item"><span class="stat-label">Level</span><span class="stat-val" id="go-level">1</span></div>
+        <div class="stat-item"><span class="stat-label">Trap Hits</span><span class="stat-val" id="go-traps">0</span></div>
+        <div class="stat-item"><span class="stat-label">Best Combo</span><span class="stat-val" id="go-combo">0</span></div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" id="restart-go-btn">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSE MODAL -->
+  <div class="modal-overlay" id="pause-modal">
+    <div class="modal">
+      <h2>⏸ Paused</h2>
+      <div class="sub">Take a breather 🌿</div>
+      <div class="modal-btns" style="margin-top:20px">
+        <button class="modal-btn primary" id="resume-btn">▶ Resume</button>
+        <button class="modal-btn secondary" id="restart-pause-btn">🔄 Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal" style="text-align:left">
+      <h2 style="text-align:center;margin-bottom:12px">How to Play</h2>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--sub);line-height:1.6">
+        <p>🎯 <strong style="color:var(--text)">Drop fruits</strong> by tapping or clicking the game area.</p>
+        <p>🔀 <strong style="color:var(--text)">Merge same fruits</strong> to create bigger ones and earn points.</p>
+        <p>🏆 <strong style="color:var(--text)">Complete the mission</strong> on each level to advance.</p>
+        <p style="background:rgba(255,0,84,.15);border:1px solid rgba(255,0,84,.3);border-radius:10px;padding:8px">
+          💣 <strong style="color:var(--trap)">TRAPS</strong> disguised as fruits will
+          <strong style="color:var(--trap)">steal your points</strong> when merged!
+          Watch for ⚠️ — but it doesn't always appear!
+        </p>
+        <p>💥 <strong style="color:var(--accent2)">Combos</strong> give bonus points — merge quickly!</p>
+        <p>📏 <strong style="color:var(--red)">Don't let fruits</strong> reach the red line or it's game over!</p>
+      </div>
+      <div class="modal-btns" style="margin-top:20px">
+        <button class="modal-btn primary" id="close-help-btn">Got it! 🎮</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
