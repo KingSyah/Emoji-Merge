@@ -986,6 +986,6 @@ window.addEventListener('DOMContentLoaded', () => {
   makeStars();
   // Auto-update copyright year
   const el = document.getElementById('copyright-text');
-  if (el) el.textContent = `© ${new Date().getFullYear()} KingSyah · All Rights Reserved`;
+  if (el) el.textContent = `© ${new Date().getFullYear()} KingSyah`;
   window.game = new Game();
 });
