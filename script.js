@@ -335,12 +335,14 @@ class Game {
 
   // ===== PHYSICS =====
   update() {
+    const now = Date.now();
+
     // 1. Pergerakan dasar & Gravitasi
     for (let i = 0; i < this.fruits.length; i++) {
       const f = this.fruits[i];
       f.vy += this.gravity;
       
-      // Friksi udara alami (menghapus kode penghenti paksa agar tidak bergetar)
+      // Friksi udara alami agar gerakan halus
       f.vx *= 0.99;
       f.vy *= 0.99;
 
@@ -348,28 +350,40 @@ class Game {
       f.y += f.vy;
     }
 
-    // 2. Iterasi Posisi (Mencegah buah saling menembus/terhimpit)
-    // Diulang 5 kali per frame agar tumpukan buah stabil dan solid
+    // 2. Iterasi Posisi (Mencegah tumpang tindih DAN keluar frame)
     const iterations = 5;
     for (let k = 0; k < iterations; k++) {
       for (let i = 0; i < this.fruits.length; i++) {
         const f = this.fruits[i];
 
-        // Batas Tembok & Lantai (Resolusi Posisi)
-        if (f.x - f.radius < this.wallT) f.x = this.wallT + f.radius;
-        if (f.x + f.radius > this.canvas.width - this.wallT) f.x = this.canvas.width - this.wallT - f.radius;
-        if (f.y + f.radius > this.floorY) f.y = this.floorY - f.radius;
-
-        // Cek tabrakan dengan buah lain
+        // Cek tabrakan antar buah
         for (let j = i + 1; j < this.fruits.length; j++) {
           this.resolvePosition(f, this.fruits[j]);
         }
+
+        // KUNCI PERBAIKAN: Kunci paksa di batas tembok SETELAH digeser oleh buah lain
+        // Ini memastikan tidak ada buah yang bisa "bocor" keluar layar
+        if (f.x - f.radius < this.wallT) f.x = this.wallT + f.radius;
+        if (f.x + f.radius > this.canvas.width - this.wallT) f.x = this.canvas.width - this.wallT - f.radius;
+        if (f.y + f.radius > this.floorY) f.y = this.floorY - f.radius;
       }
     }
 
-    // 3. Resolusi Kecepatan (Pantulan / Bouncing)
-    for (let i = 0; i < this.fruits.length; i++) {
+    // 3. Resolusi Kecepatan & TRAP EXPIRED LOGIC
+    for (let i = this.fruits.length - 1; i >= 0; i--) {
       const f = this.fruits[i];
+
+      // --- TRAP EXPIRED LOGIC ---
+      if (f.isTrap) {
+        const age = now - f.dropTime;
+        if (age > 12000) { // 12 Detik Trap akan hancur
+          this.spawnParticles(f.x, f.y, '#888', 12);
+          this.addFloatText(f.x, f.y, 'Poof!', '#aaaaaa');
+          this.fruits.splice(i, 1); // Hapus trap dari game
+          continue; // Lanjut ke buah berikutnya
+        }
+      }
+      // --------------------------
 
       // Pantulan Tembok
       if (f.x - f.radius <= this.wallT && f.vx < 0) f.vx = Math.abs(f.vx) * this.restitution;
@@ -378,9 +392,10 @@ class Game {
       // Pantulan Lantai
       if (f.y + f.radius >= this.floorY && f.vy > 0) {
         f.vy *= -this.restitution;
-        f.vx *= 0.85; // Kurangi friksi lantai (sebelumnya 0.6) agar tumpukan bawah bisa menyebar/menggelinding
+        f.vx *= 0.85; // Friksi lantai
       }
 
+      // Hitung pantulan momentum dengan buah lain
       for (let j = i + 1; j < this.fruits.length; j++) {
         this.resolveVelocity(f, this.fruits[j]);
       }
@@ -401,8 +416,7 @@ class Game {
 
     if (dist >= minD || dist === 0) return;
 
-    // "Rolling" Nudge: Jika jatuh presisi di atas buah lain, beri dorongan horizontal mikroskopis 
-    // agar mereka saling menggelinding, bukan seimbang lalu memampat.
+    // Nudge: Jika jatuh tepat di atas buah, geser sedikit agar menggelinding
     if (Math.abs(dx) < 0.2 && dy !== 0) {
       dx += (Math.random() - 0.5) * 0.5;
       dist = Math.hypot(dx, dy);
@@ -413,7 +427,6 @@ class Game {
     const overlap = minD - dist;
     const total = a.mass + b.mass;
 
-    // Geser posisi agar tidak saling tindih berdasarkan rasio massa
     a.x -= nx * overlap * (b.mass / total);
     a.y -= ny * overlap * (b.mass / total);
     b.x += nx * overlap * (a.mass / total);
@@ -426,7 +439,6 @@ class Game {
     let dist = Math.hypot(dx, dy);
     const minD = a.radius + b.radius;
 
-    // Hanya hitung kecepatan jika bersentuhan
     if (dist > minD + 0.1 || dist === 0) return;
 
     const nx = dx / dist;
@@ -434,7 +446,6 @@ class Game {
     const rvx = b.vx - a.vx;
     const rvy = b.vy - a.vy;
 
-    // Relatif kecepatan (Hanya pantulkan jika mereka bergerak saling mendekat)
     const velAlongNormal = rvx * nx + rvy * ny;
     if (velAlongNormal > 0) return; 
 
@@ -798,12 +809,21 @@ class Game {
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(f.displayEmoji, f.x, f.y);
 
-      // Pulsing trap indicator
+     // Pulsing trap indicator & Expiration warning
       if (f.isTrap) {
-        const alpha = 0.5 + Math.sin(Date.now() / 400) * 0.3;
+        const age = Date.now() - f.dropTime;
+        const timeLeft = 12000 - age; // 12000ms = 12 detik
+        
+        // Blink super cepat jika sisa waktu kurang dari 3 detik
+        const blinkSpeed = timeLeft < 3000 ? 80 : 400; 
+        const alpha = 0.5 + Math.sin(Date.now() / blinkSpeed) * 0.3;
+        
         ctx.globalAlpha = alpha;
         ctx.font = `${f.radius * 0.6}px serif`;
-        ctx.fillText('⚡', f.x + f.radius * 0.55, f.y - f.radius * 0.55);
+        
+        // Ganti ikon menjadi jam pasir/stopwatch saat hampir habis
+        const icon = timeLeft < 3000 ? '⏱️' : '⚡';
+        ctx.fillText(icon, f.x + f.radius * 0.55, f.y - f.radius * 0.55);
         ctx.globalAlpha = 1;
       }
       ctx.restore();
