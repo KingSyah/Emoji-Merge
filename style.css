@@ -263,3 +263,17 @@ body {
 :-webkit-full-screen body {
   padding: 0 !important;
 }
+
+/* Footer Copyright */
+.footer {
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+  color: var(--sub); /* Menggunakan warna redup bawaan temamu */
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 100;
+  pointer-events: none; /* Sangat penting: agar teks tidak menghalangi klik/tap ke game area */
+}
