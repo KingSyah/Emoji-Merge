@@ -11,8 +11,7 @@ fruit-smash/
 ├── index.html      # HTML structure & modals
 ├── style.css       # All styling, animations, layout
 ├── script.js       # Game logic, physics, rendering
-├── README.md       # This file
-└── COPYRIGHT.md    # Footer/copyright reuse guide
+└── README.md       # This file
 ```
 
 No build tools, no frameworks, no dependencies — just open `index.html` in a browser.
