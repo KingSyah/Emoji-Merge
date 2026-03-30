@@ -335,27 +335,54 @@ class Game {
 
   // ===== PHYSICS =====
   update() {
+    // 1. Pergerakan dasar & Gravitasi
     for (let i = 0; i < this.fruits.length; i++) {
       const f = this.fruits[i];
       f.vy += this.gravity;
-      f.vx *= 0.999;
-      f.vy *= 0.999;
-      if (Math.abs(f.vx) < 0.03) f.vx = 0;
-
-      const speed = Math.hypot(f.vx, f.vy);
-      if (speed < 0.8) { f.vx *= 0.92; f.vy *= 0.92; }
+      
+      // Friksi udara alami (menghapus kode penghenti paksa agar tidak bergetar)
+      f.vx *= 0.99;
+      f.vy *= 0.99;
 
       f.x += f.vx;
       f.y += f.vy;
+    }
 
-      // Walls
-      if (f.x - f.radius < this.wallT) { f.x = this.wallT + f.radius; f.vx = Math.abs(f.vx) * this.restitution; }
-      if (f.x + f.radius > this.canvas.width - this.wallT) { f.x = this.canvas.width - this.wallT - f.radius; f.vx = -Math.abs(f.vx) * this.restitution; }
-      if (f.y + f.radius > this.floorY) { f.y = this.floorY - f.radius; f.vy *= -this.restitution; f.vx *= this.friction; }
+    // 2. Iterasi Posisi (Mencegah buah saling menembus/terhimpit)
+    // Diulang 5 kali per frame agar tumpukan buah stabil dan solid
+    const iterations = 5;
+    for (let k = 0; k < iterations; k++) {
+      for (let i = 0; i < this.fruits.length; i++) {
+        const f = this.fruits[i];
 
-      // Fruit-to-fruit
+        // Batas Tembok & Lantai (Resolusi Posisi)
+        if (f.x - f.radius < this.wallT) f.x = this.wallT + f.radius;
+        if (f.x + f.radius > this.canvas.width - this.wallT) f.x = this.canvas.width - this.wallT - f.radius;
+        if (f.y + f.radius > this.floorY) f.y = this.floorY - f.radius;
+
+        // Cek tabrakan dengan buah lain
+        for (let j = i + 1; j < this.fruits.length; j++) {
+          this.resolvePosition(f, this.fruits[j]);
+        }
+      }
+    }
+
+    // 3. Resolusi Kecepatan (Pantulan / Bouncing)
+    for (let i = 0; i < this.fruits.length; i++) {
+      const f = this.fruits[i];
+
+      // Pantulan Tembok
+      if (f.x - f.radius <= this.wallT && f.vx < 0) f.vx = Math.abs(f.vx) * this.restitution;
+      if (f.x + f.radius >= this.canvas.width - this.wallT && f.vx > 0) f.vx = -Math.abs(f.vx) * this.restitution;
+      
+      // Pantulan Lantai
+      if (f.y + f.radius >= this.floorY && f.vy > 0) {
+        f.vy *= -this.restitution;
+        f.vx *= 0.85; // Kurangi friksi lantai (sebelumnya 0.6) agar tumpukan bawah bisa menyebar/menggelinding
+      }
+
       for (let j = i + 1; j < this.fruits.length; j++) {
-        this.resolveCollision(f, this.fruits[j]);
+        this.resolveVelocity(f, this.fruits[j]);
       }
     }
 
@@ -366,30 +393,61 @@ class Game {
     this.checkLevelGoal();
   }
 
-  resolveCollision(a, b) {
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const dist = Math.hypot(dx, dy);
-    const minD = a.radius + b.radius + 1;
+  resolvePosition(a, b) {
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dist = Math.hypot(dx, dy);
+    const minD = a.radius + b.radius;
+
     if (dist >= minD || dist === 0) return;
 
-    const nx = dx / dist, ny = dy / dist;
+    // "Rolling" Nudge: Jika jatuh presisi di atas buah lain, beri dorongan horizontal mikroskopis 
+    // agar mereka saling menggelinding, bukan seimbang lalu memampat.
+    if (Math.abs(dx) < 0.2 && dy !== 0) {
+      dx += (Math.random() - 0.5) * 0.5;
+      dist = Math.hypot(dx, dy);
+    }
+
+    const nx = dx / dist;
+    const ny = dy / dist;
     const overlap = minD - dist;
     const total = a.mass + b.mass;
-    a.x -= nx * overlap * b.mass / total;
-    a.y -= ny * overlap * b.mass / total;
-    b.x += nx * overlap * a.mass / total;
-    b.y += ny * overlap * a.mass / total;
 
-    if (b.y + b.radius > this.floorY) b.y = this.floorY - b.radius;
-    if (a.y + a.radius > this.floorY) a.y = this.floorY - a.radius;
+    // Geser posisi agar tidak saling tindih berdasarkan rasio massa
+    a.x -= nx * overlap * (b.mass / total);
+    a.y -= ny * overlap * (b.mass / total);
+    b.x += nx * overlap * (a.mass / total);
+    b.y += ny * overlap * (a.mass / total);
+  }
 
-    const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
-    const vel = rvx * nx + rvy * ny;
-    if (vel > 0) return;
-    const imp = -(1 + this.restitution) * vel;
-    const i1 = imp * b.mass / total, i2 = imp * a.mass / total;
-    a.vx -= i1 * nx; a.vy -= i1 * ny;
-    b.vx += i2 * nx; b.vy += i2 * ny;
+  resolveVelocity(a, b) {
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dist = Math.hypot(dx, dy);
+    const minD = a.radius + b.radius;
+
+    // Hanya hitung kecepatan jika bersentuhan
+    if (dist > minD + 0.1 || dist === 0) return;
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const rvx = b.vx - a.vx;
+    const rvy = b.vy - a.vy;
+
+    // Relatif kecepatan (Hanya pantulkan jika mereka bergerak saling mendekat)
+    const velAlongNormal = rvx * nx + rvy * ny;
+    if (velAlongNormal > 0) return; 
+
+    const total = a.mass + b.mass;
+    const impulse = -(1 + this.restitution) * velAlongNormal;
+    
+    const impulseX = impulse * nx;
+    const impulseY = impulse * ny;
+
+    a.vx -= impulseX * (b.mass / total);
+    a.vy -= impulseY * (b.mass / total);
+    b.vx += impulseX * (a.mass / total);
+    b.vy += impulseY * (a.mass / total);
   }
 
   // ===== MERGE LOGIC =====
