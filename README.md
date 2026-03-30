@@ -252,11 +252,3 @@ this.energyRegenTime = 2200; // ms per pip regen
 
 ---
 
-## 📄 License & Copyright
-
-```
-© 2025 KingSyah · All Rights Reserved
-```
-
-Released under the **MIT License** — free to use, modify, and distribute with attribution.
-See `COPYRIGHT.md` for full license text and footer reuse guide for future projects.
