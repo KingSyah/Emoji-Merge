@@ -86,6 +86,7 @@ class Game {
     this.canDrop = true;
     this.dropCooldown = 350;
     this.lastDrop = 0;
+    this.prevDropTime = 0; // untuk deteksi spam
 
     // Energy system
     this.maxEnergy = 5;
@@ -320,13 +321,20 @@ class Game {
     }
 
     this.lastDrop = now;
-    this.energy = Math.max(0, this.energy - 1);
-    // Reset regen timer when energy is consumed
-    if (this.energy < this.maxEnergy) {
+    // Spam detection: jika drop terlalu cepat (< 1500ms dari drop sebelumnya), kurangi energy
+    const timeSinceLast = this.prevDropTime > 0 ? now - this.prevDropTime : 9999;
+    const isSpam = timeSinceLast < 1500;
+    this.prevDropTime = now;
+
+    if (isSpam) {
+      this.energy = Math.max(0, this.energy - 1);
+      // Reset regen timer hanya saat spam
       this.lastEnergyRegen = now;
       this.energyRegenProgress = 0;
+      this.updateEnergyUI();
+      this.showSpamWarning();
     }
-    this.updateEnergyUI();
+    // Klik normal: energy tidak berkurang, regen tetap berjalan
 
     const next = this.nextType;
     const def = this.getFruitDef(next);
@@ -413,6 +421,23 @@ class Game {
       g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .18);
       o.start(); o.stop(ac.currentTime + .18);
     } catch (e) {}
+  }
+
+  showSpamWarning() {
+    // Tampilkan teks peringatan singkat di canvas
+    const wrap = document.getElementById('canvas-wrap');
+    const existing = wrap.querySelector('.energy-empty-hint');
+    if (existing) existing.remove();
+    const hint = document.createElement('div');
+    hint.className = 'energy-empty-hint';
+    if (this.energy <= 0) {
+      hint.textContent = '⚡ No Energy! Wait…';
+    } else {
+      hint.textContent = `⚡ Slow down! -1 Energy`;
+      hint.style.background = 'rgba(255,107,53,.85)';
+    }
+    wrap.appendChild(hint);
+    setTimeout(() => hint.remove(), 1000);
   }
 
   updateNextDisplay() {
@@ -823,6 +848,7 @@ class Game {
     this.energy = this.maxEnergy;
     this.energyRegenProgress = 0;
     this.lastEnergyRegen = Date.now();
+    this.prevDropTime = 0;
     this.updateEnergyUI();
     hideModal('gameover-modal');
     hideModal('pause-modal');
